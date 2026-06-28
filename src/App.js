@@ -1,25 +1,24 @@
-import logo from './logo.svg';
-import './App.css';
+import { useEffect } from 'react'
+import useStore from './store/useStore'
+import Auth from './pages/Auth'
+import Chat from './pages/Chat'
 
 function App() {
+  const { user, setUser } = useStore()
+
+  useEffect(() => {
+    const username = localStorage.getItem('username')
+    const token = localStorage.getItem('token')
+    if (username && token) {
+      setUser({ username }, token)
+    }
+  }, [])
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div style={{ fontFamily: 'Inter, sans-serif' }}>
+      {user ? <Chat /> : <Auth />}
     </div>
-  );
+  )
 }
 
-export default App;
+export default App
