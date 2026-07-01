@@ -1,5 +1,6 @@
-const messages = []
-const groups = []
+const Message = require('../models/Message')
+const Group = require('../models/Group')
+const { encrypt, decrypt } = require('../utils/crypto')
 
 module.exports = (io) => {
   const onlineUsers = {}
@@ -13,71 +14,112 @@ module.exports = (io) => {
     })
 
     // Личное сообщение
-    socket.on('private_message', ({ to, text, from, type }) => {
-      const msg = { from, to, text, type: type || 'text', createdAt: new Date() }
-      messages.push(msg)
+    socket.on('private_message', async ({ to, text, from, type }) => {
+      const encryptedText = type === 'text' ? encrypt(text) : text
+      const msg = { from, to, text: encryptedText, type: type || 'text', createdAt: new Date() }
+      
+      try {
+        await new Message(msg).save()
+      } catch(e) {}
+
+      // Отправляем расшифрованное
+      const decryptedMsg = { ...msg, text: type === 'text' ? text : text }
       const recipientSocket = onlineUsers[to]
-      if (recipientSocket) io.to(recipientSocket).emit('private_message', msg)
-      socket.emit('private_message', msg)
+      if (recipientSocket) io.to(recipientSocket).emit('private_message', decryptedMsg)
+      socket.emit('private_message', decryptedMsg)
     })
 
     // История личных сообщений
-    socket.on('get_history', ({ user1, user2 }) => {
-      const history = messages.filter(m =>
-        (m.from === user1 && m.to === user2) ||
-        (m.from === user2 && m.to === user1)
-      )
-      socket.emit('history', history)
-    })
+    socket.on('get_history', async ({ user1, user2 }) => {
+  try {
+    const messages = await Message.find({
+      $or: [
+        { from: user1, to: user2 },
+        { from: user2, to: user1 }
+      ]
+    }).sort({ createdAt: 1 }).limit(100)
+
+    const decrypted = messages.map(m => ({
+      ...m.toObject(),
+      text: m.type === 'text' ? decrypt(m.text) : m.text
+    }))
+
+    socket.emit('history', decrypted)
+
+    // Отмечаем как прочитанные
+    await Message.updateMany(
+      { from: user2, to: user1, read: false },
+      { read: true }
+    )
+    const senderSocket = onlineUsers[user2]
+    if (senderSocket) {
+      io.to(senderSocket).emit('messages_read', { from: user1, to: user2 })
+    }
+  } catch(e) {
+    socket.emit('history', [])
+  }
+})
 
     // Создать группу
-    socket.on('create_group', ({ name, members, creator }) => {
-      const group = {
-        id: Date.now().toString(),
-        name,
-        members: [...members, creator],
-        creator,
-        createdAt: new Date(),
-        messages: []
-      }
-      groups.push(group)
-      
-      // Присоединяем всех участников к комнате
-      group.members.forEach(member => {
-        const memberSocket = onlineUsers[member]
-        if (memberSocket) {
-          io.to(memberSocket).emit('group_created', group)
-        }
-      })
+    socket.on('create_group', async ({ name, members, creator }) => {
+      try {
+        const group = new Group({
+          id: Date.now().toString(),
+          name,
+          members: [...members, creator],
+          creator,
+        })
+        await group.save()
+
+        const groupData = group.toObject()
+        group.members.forEach(member => {
+          const memberSocket = onlineUsers[member]
+          if (memberSocket) io.to(memberSocket).emit('group_created', groupData)
+        })
+      } catch(e) {}
     })
 
-    // Получить группы пользователя
-    socket.on('get_groups', (username) => {
-      const userGroups = groups.filter(g => g.members.includes(username))
-      socket.emit('groups', userGroups)
+    // Получить группы
+    socket.on('get_groups', async (username) => {
+      try {
+        const groups = await Group.find({ members: username })
+        socket.emit('groups', groups)
+      } catch(e) {
+        socket.emit('groups', [])
+      }
     })
 
     // Групповое сообщение
-    socket.on('group_message', ({ groupId, text, from, type }) => {
-      const group = groups.find(g => g.id === groupId)
-      if (!group) return
+    socket.on('group_message', async ({ groupId, text, from, type }) => {
+      try {
+        const group = await Group.findOne({ id: groupId })
+        if (!group) return
 
-      const msg = { groupId, from, text, type: type || 'text', createdAt: new Date() }
-      group.messages.push(msg)
+        const encryptedText = type === 'text' ? encrypt(text) : text
+        const msg = { groupId, from, text: encryptedText, type: type || 'text', createdAt: new Date() }
+        await new Message(msg).save()
 
-      // Отправляем всем участникам группы
-      group.members.forEach(member => {
-        const memberSocket = onlineUsers[member]
-        if (memberSocket) {
-          io.to(memberSocket).emit('group_message', msg)
-        }
-      })
+        // Отправляем расшифрованное
+        const decryptedMsg = { ...msg, text: type === 'text' ? text : text }
+        group.members.forEach(member => {
+          const memberSocket = onlineUsers[member]
+          if (memberSocket) io.to(memberSocket).emit('group_message', decryptedMsg)
+        })
+      } catch(e) {}
     })
 
     // История группы
-    socket.on('get_group_history', (groupId) => {
-      const group = groups.find(g => g.id === groupId)
-      socket.emit('group_history', group ? group.messages : [])
+    socket.on('get_group_history', async (groupId) => {
+      try {
+        const messages = await Message.find({ groupId }).sort({ createdAt: 1 }).limit(100)
+        const decrypted = messages.map(m => ({
+          ...m.toObject(),
+          text: m.type === 'text' ? decrypt(m.text) : m.text
+        }))
+        socket.emit('group_history', decrypted)
+      } catch(e) {
+        socket.emit('group_history', [])
+      }
     })
 
     // Печатает
@@ -90,6 +132,21 @@ module.exports = (io) => {
       const recipientSocket = onlineUsers[to]
       if (recipientSocket) io.to(recipientSocket).emit('stop_typing', { from })
     })
+
+    // Отметить сообщения как прочитанные
+socket.on('mark_read', async ({ from, to }) => {
+  try {
+    await Message.updateMany(
+      { from, to, read: false },
+      { read: true }
+    )
+    // Уведомляем отправителя что сообщения прочитаны
+    const senderSocket = onlineUsers[from]
+    if (senderSocket) {
+      io.to(senderSocket).emit('messages_read', { from: to, to: from })
+    }
+  } catch(e) {}
+})
 
     socket.on('disconnect', () => {
       if (socket.username) {
