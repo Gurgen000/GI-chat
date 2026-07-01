@@ -4,7 +4,7 @@ import Message from './Message'
 import EmojiPicker from 'emoji-picker-react'
 
 export default function ChatWindow({ onSendMessage, onTyping, onStopTyping }) {
-  const { user, currentChat, messages, typingUser, onlineUsers } = useStore()
+  const { user, currentChat, currentGroup, messages, typingUser, onlineUsers } = useStore()
   const [text, setText] = useState('')
   const [showEmoji, setShowEmoji] = useState(false)
   const fileRef = useRef(null)
@@ -57,7 +57,7 @@ const sendImage = async () => {
   formData.append('image', imagePreview.file)
 
   try {
-    const res = await fetch('http://localhost:4000/api/upload', {
+    const res = await fetch('https://gi-chat-production.up.railway.app/api/upload', {
       method: 'POST',
       body: formData
     })
@@ -72,8 +72,9 @@ const sendImage = async () => {
 }
 
   const isOnline = onlineUsers.includes(currentChat)
+          if (!currentChat && !currentGroup) 
 
-  if (!currentChat) {
+  if (!currentChat && !currentGroup) {
     return (
       <div style={styles.empty}>
         <span style={styles.emptyIcon}>💬</span>
@@ -83,24 +84,43 @@ const sendImage = async () => {
     )
   }
 
+  const getInitials = (name) => name?.slice(0, 2).toUpperCase() || 'U'
+
+const getColor = (name) => {
+  const colors = ['#6c63ff', '#ff6584', '#43b89c', '#f7b731', '#fc5c65', '#45aaf2']
+  const index = (name?.charCodeAt(0) || 0) % colors.length
+  return colors[index]
+}
+
   return (
     <div style={styles.container}>
 
       {/* Шапка */}
-      <div style={styles.header}>
-        <div style={styles.headerInfo}>
-          <span style={styles.avatar}>👤</span>
-          <div>
-            <h3 style={styles.chatName}>{currentChat}</h3>
-            <span style={{
-              ...styles.status,
-              color: isOnline ? '#4caf50' : '#888'
-            }}>
-              {isOnline ? 'онлайн' : 'оффлайн'}
-            </span>
-          </div>
-        </div>
-      </div>
+    <div style={styles.headerInfo}>
+  <div style={{
+    width: '44px',
+    height: '44px',
+    borderRadius: '50%',
+    background: currentGroup
+      ? getColor(currentGroup.name)
+      : getColor(currentChat || 'U'),
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '14px',
+    fontWeight: '700',
+    color: 'white',
+    flexShrink: 0,
+  }}>
+    {currentGroup ? getInitials(currentGroup.name) : getInitials(currentChat || 'U')}
+  </div>
+  <div>
+    <h3 style={styles.chatName}>{currentGroup ? currentGroup.name : currentChat}</h3>
+    <span style={{ ...styles.status, color: currentGroup ? '#6c63ff' : isOnline ? '#4caf50' : '#888' }}>
+      {currentGroup ? `${currentGroup.members.length} участников` : isOnline ? 'онлайн' : 'оффлайн'}
+    </span>
+  </div>
+</div>
 
       {/* Сообщения */}
       <div style={styles.messages}>
@@ -121,9 +141,9 @@ const sendImage = async () => {
       </div>
 
       {/* Печатает */}
-      {typingUser === currentChat && (
-        <div style={styles.typing}>печатает...</div>
-      )}
+     {typingUser && !currentGroup && typingUser === currentChat && (
+  <div style={styles.typing}>печатает...</div>
+)}
 
       {/* Поле ввода */}
       <div style={styles.inputArea}>
@@ -205,11 +225,12 @@ const styles = {
     borderBottom: '1px solid #2a2a2a',
     background: '#141414',
   },
-  headerInfo: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-  },
+ headerInfo: {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '12px',
+  padding: '0 4px',
+},
   avatar: {
     fontSize: '28px',
     background: '#2a2a2a',
@@ -228,14 +249,19 @@ const styles = {
   status: {
     fontSize: '12px',
   },
-  messages: {
-    flex: 1,
-    overflowY: 'auto',
-    padding: '20px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '10px',
-  },
+ messages: {
+  flex: 1,
+  overflowY: 'auto',
+  padding: '20px',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '10px',
+  background: `
+    radial-gradient(ellipse at top left, rgba(108, 99, 255, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at bottom right, rgba(255, 101, 132, 0.05) 0%, transparent 50%),
+    #0f0f0f
+  `,
+},
   typing: {
     padding: '8px 20px',
     fontSize: '12px',

@@ -4,21 +4,38 @@ export default function Message({ msg, isSent }) {
     minute: '2-digit'
   })
 
-  const isImage = msg.type === 'image' || msg.text?.startsWith('http://localhost:4000/uploads/')
+  const isImage = msg.type === 'image' || msg.text?.startsWith('https://gi-chat-production.up.railway.app/uploads/')
+
+  const ReadStatus = () => {
+    if (!isSent) return null
+    return (
+      <span style={{ marginLeft: '4px', fontSize: '11px' }}>
+        {msg.read ? (
+          <span style={{ color: '#43b89c' }}>✓✓</span>
+        ) : (
+          <span style={{ color: 'rgba(255,255,255,0.5)' }}>✓</span>
+        )}
+      </span>
+    )
+  }
 
   return (
     <div style={{
       ...styles.container,
       alignSelf: isSent ? 'flex-end' : 'flex-start',
+      animation: 'fadeIn 0.2s ease',
     }}>
       <div style={{
         ...styles.bubble,
         background: isSent
-          ? 'linear-gradient(135deg, #6c63ff, #ff6584)'
-          : '#1e1e1e',
-        borderBottomRightRadius: isSent ? '4px' : '16px',
-        borderBottomLeftRadius: isSent ? '16px' : '4px',
+          ? 'linear-gradient(135deg, #6c63ff, #8b5cf6)'
+          : '#1e1e2e',
+        borderBottomRightRadius: isSent ? '4px' : '18px',
+        borderBottomLeftRadius: isSent ? '18px' : '4px',
         padding: isImage ? '6px' : '10px 14px',
+        boxShadow: isSent
+          ? '0 2px 8px rgba(108, 99, 255, 0.3)'
+          : '0 2px 8px rgba(0, 0, 0, 0.3)',
       }}>
         {isImage ? (
           <img
@@ -30,7 +47,10 @@ export default function Message({ msg, isSent }) {
         ) : (
           <p style={styles.text}>{msg.text}</p>
         )}
-        <span style={styles.time}>{time}</span>
+        <div style={styles.footer}>
+          <span style={styles.time}>{time}</span>
+          <ReadStatus />
+        </div>
       </div>
     </div>
   )
@@ -42,13 +62,15 @@ const styles = {
     maxWidth: '65%',
   },
   bubble: {
-    borderRadius: '16px',
+    borderRadius: '18px',
+    transition: 'all 0.2s ease',
   },
   text: {
     fontSize: '14px',
     color: 'white',
-    lineHeight: '1.5',
+    lineHeight: '1.6',
     margin: 0,
+    wordBreak: 'break-word',
   },
   image: {
     maxWidth: '250px',
@@ -57,13 +79,16 @@ const styles = {
     cursor: 'pointer',
     display: 'block',
   },
+  footer: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: '2px',
+    marginTop: '4px',
+  },
   time: {
     fontSize: '10px',
     opacity: '0.6',
-    display: 'block',
-    textAlign: 'right',
-    marginTop: '4px',
     color: 'white',
-    padding: '0 4px 2px',
   }
 }

@@ -43,6 +43,15 @@ const useStore = create((set) => ({
   // Печатает
   typingUser: null,
   setTypingUser: (typingUser) => set({ typingUser }),
+
+  markMessagesRead: (from, to) => set((state) => ({
+  messages: state.messages.map(m =>
+    m.from === from && m.to === to ? { ...m, read: true } : m
+  )
+})),
+
 }))
+
+
 
 export default useStore

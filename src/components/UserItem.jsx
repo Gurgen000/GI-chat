@@ -1,6 +1,6 @@
 import useStore from '../store/useStore'
 
-export default function UserItem({ user, isOnline, isActive, onClick }) {
+export default function UserItem({ user, isOnline, isActive, onClick, getColor, getInitials }) {
   const unread = useStore((state) => state.unread[user.username] || 0)
 
   return (
@@ -12,15 +12,17 @@ export default function UserItem({ user, isOnline, isActive, onClick }) {
       onClick={onClick}
     >
       <div style={styles.avatarContainer}>
-        <span style={styles.avatar}>👤</span>
+        <div style={{
+          ...styles.avatar,
+          background: getColor ? getColor(user.username) : '#6c63ff'
+        }}>
+          {getInitials ? getInitials(user.username) : user.username.slice(0, 2).toUpperCase()}
+        </div>
         {isOnline && <div style={styles.onlineDot} />}
       </div>
       <div style={styles.info}>
         <div style={styles.name}>{user.username}</div>
-        <div style={{
-          ...styles.status,
-          color: isOnline ? '#4caf50' : '#888'
-        }}>
+        <div style={{ ...styles.status, color: isOnline ? '#4caf50' : '#888' }}>
           {isOnline ? 'онлайн' : 'оффлайн'}
         </div>
       </div>
@@ -45,14 +47,15 @@ const styles = {
     position: 'relative',
   },
   avatar: {
-    fontSize: '28px',
-    background: '#2a2a2a',
-    borderRadius: '50%',
     width: '44px',
     height: '44px',
+    borderRadius: '50%',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+    fontSize: '14px',
+    fontWeight: '700',
+    color: 'white',
   },
   onlineDot: {
     width: '10px',
@@ -64,18 +67,9 @@ const styles = {
     right: '0',
     border: '2px solid #141414',
   },
-  info: {
-    flex: 1,
-  },
-  name: {
-    fontWeight: '500',
-    fontSize: '14px',
-    color: 'white',
-  },
-  status: {
-    fontSize: '12px',
-    marginTop: '2px',
-  },
+  info: { flex: 1 },
+  name: { fontWeight: '500', fontSize: '14px', color: 'white' },
+  status: { fontSize: '12px', marginTop: '2px' },
   badge: {
     background: 'linear-gradient(135deg, #6c63ff, #ff6584)',
     color: 'white',

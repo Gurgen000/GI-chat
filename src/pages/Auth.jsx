@@ -15,7 +15,7 @@ export default function Auth() {
     setLoading(true)
     setError('')
     try {
-      const res = await fetch(`http://localhost:4000/api/auth/${tab}`, {
+      const res = await fetch(`https://gi-chat-production.up.railway.app/api/auth/${tab}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
