@@ -2,11 +2,13 @@ import { useState, useEffect, useRef } from 'react'
 import useStore from '../store/useStore'
 import Message from './Message'
 import EmojiPicker from 'emoji-picker-react'
+import UserProfile from './UserProfile'
 
 export default function ChatWindow({ onSendMessage, onTyping, onStopTyping }) {
-  const { user, currentChat, currentGroup, messages, typingUser, onlineUsers } = useStore()
+  const { user, currentChat, currentGroup, messages, typingUser, onlineUsers, blockedUsers } = useStore()
   const [text, setText] = useState('')
   const [showEmoji, setShowEmoji] = useState(false)
+  const [showProfile, setShowProfile] = useState(false)
   const fileRef = useRef(null)
   const [imagePreview, setImagePreview] = useState(null)
   const messagesEndRef = useRef(null)
@@ -96,7 +98,7 @@ const getColor = (name) => {
     <div style={styles.container}>
 
       {/* Шапка */}
-    <div style={styles.headerInfo}>
+   <div style={{...styles.headerInfo, cursor: currentChat ? 'pointer' : 'default'}} onClick={() => currentChat && setShowProfile(true)}>
   <div style={{
     width: '44px',
     height: '44px',
@@ -120,6 +122,12 @@ const getColor = (name) => {
       {currentGroup ? `${currentGroup.members.length} участников` : isOnline ? 'онлайн' : 'оффлайн'}
     </span>
   </div>
+  {showProfile && currentChat && (
+  <UserProfile
+    username={currentChat}
+    onClose={() => setShowProfile(false)}
+  />
+)}
 </div>
 
       {/* Сообщения */}
@@ -146,48 +154,41 @@ const getColor = (name) => {
 )}
 
       {/* Поле ввода */}
-      <div style={styles.inputArea}>
-  {showEmoji && (
-    <div style={styles.emojiPicker}>
-      <EmojiPicker
-        theme="dark"
-        onEmojiClick={(e) => {
-          setText(prev => prev + e.emoji)
-          setShowEmoji(false)
-        }}
+  <div style={styles.inputArea}>
+  {blockedUsers.includes(currentChat) ? (
+    <div style={styles.blockedMessage}>
+      🚫 Вы заблокировали этого пользователя
+    </div>
+  ) : (
+    <>
+      {imagePreview && (
+        <div style={styles.previewContainer}>
+          <img src={imagePreview.url} alt="превью" style={styles.previewImage} />
+          <div style={styles.previewButtons}>
+            <button style={styles.btnSendImage} onClick={sendImage}>Отправить ➤</button>
+            <button style={styles.btnCancelImage} onClick={() => setImagePreview(null)}>Отмена ✕</button>
+          </div>
+        </div>
+      )}
+      <button style={styles.btnEmoji} onClick={() => setShowEmoji(!showEmoji)}>😊</button>
+      <input
+        type="file"
+        accept="image/*"
+        style={{ display: 'none' }}
+        ref={fileRef}
+        onChange={handleImageUpload}
       />
-    </div>
+      <button style={styles.btnEmoji} onClick={() => fileRef.current.click()}>🖼</button>
+      <input
+        style={styles.input}
+        placeholder="Написать сообщение..."
+        value={text}
+        onChange={handleTyping}
+        onKeyPress={handleKey}
+      />
+      <button style={styles.btnSend} onClick={handleSend}>➤</button>
+    </>
   )}
-  {imagePreview && (
-  <div style={styles.previewContainer}>
-    <img src={imagePreview.url} alt="превью" style={styles.previewImage} />
-    <div style={styles.previewButtons}>
-      <button style={styles.btnSendImage} onClick={sendImage}>Отправить ➤</button>
-      <button style={styles.btnCancelImage} onClick={() => setImagePreview(null)}>Отмена ✕</button>
-    </div>
-  </div>
-)}
-  <button style={styles.btnEmoji} onClick={() => setShowEmoji(!showEmoji)}>
-    😊
-  </button>
-  <input
-  type="file"
-  accept="image/*"
-  style={{ display: 'none' }}
-  ref={fileRef}
-  onChange={handleImageUpload}
-/>
-<button style={styles.btnEmoji} onClick={() => fileRef.current.click()}>
-  🖼
-</button>
-  <input
-    style={styles.input}
-    placeholder="Написать сообщение..."
-    value={text}
-    onChange={handleTyping}
-    onKeyPress={handleKey}
-  />
-  <button style={styles.btnSend} onClick={handleSend}>➤</button>
 </div>
 
     </div>
@@ -356,5 +357,14 @@ btnCancelImage: {
   color: '#888',
   cursor: 'pointer',
   fontSize: '13px',
-}
+},
+
+blockedMessage: {
+  flex: 1,
+  textAlign: 'center',
+  color: '#888',
+  fontSize: '14px',
+  padding: '12px',
+},
+
 }

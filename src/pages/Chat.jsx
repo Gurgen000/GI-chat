@@ -75,14 +75,21 @@ return () => {
   }, [])
 
   const loadUsers = async () => {
-    try {
-      const res = await fetch('https://gi-chat-production.up.railway.app/api/auth/users')
-      const data = await res.json()
-      if (data.success) {
-        setUsers(data.users.filter(u => u.username !== user.username))
-      }
-    } catch(e) {}
-  }
+  try {
+    const res = await fetch(`https://gi-chat-production.up.railway.app/api/auth/users`)
+    const data = await res.json()
+    if (data.success) {
+      setUsers(data.users.filter(u => u.username !== user.username))
+    }
+
+    // Загружаем заблокированных
+    const blockRes = await fetch(`https://gi-chat-production.up.railway.app/api/auth/blocks/${user.username}`)
+    const blockData = await blockRes.json()
+    if (blockData.success) {
+      useStore.getState().setBlockedUsers(blockData.blocks)
+    }
+  } catch(e) {}
+}
 
   const showNotification = (from, text) => {
     if (Notification.permission === 'granted') {

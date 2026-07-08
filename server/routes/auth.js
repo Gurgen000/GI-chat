@@ -68,4 +68,40 @@ router.delete('/delete', async (req, res) => {
   }
 })
 
+const Block = require('../models/Block')
+
+// Заблокировать пользователя
+router.post('/block', async (req, res) => {
+  try {
+    const { blocker, blocked } = req.body
+    const exists = await Block.findOne({ blocker, blocked })
+    if (exists) return res.json({ success: false, message: 'Уже заблокирован!' })
+    await new Block({ blocker, blocked }).save()
+    res.json({ success: true })
+  } catch(e) {
+    res.json({ success: false })
+  }
+})
+
+// Разблокировать
+router.post('/unblock', async (req, res) => {
+  try {
+    const { blocker, blocked } = req.body
+    await Block.deleteOne({ blocker, blocked })
+    res.json({ success: true })
+  } catch(e) {
+    res.json({ success: false })
+  }
+})
+
+// Проверить заблокирован ли
+router.get('/blocks/:username', async (req, res) => {
+  try {
+    const blocks = await Block.find({ blocker: req.params.username })
+    res.json({ success: true, blocks: blocks.map(b => b.blocked) })
+  } catch(e) {
+    res.json({ success: false, blocks: [] })
+  }
+})
+
 module.exports = { router }

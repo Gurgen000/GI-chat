@@ -13,6 +13,16 @@ const useStore = create((set) => ({
   setUsers: (users) => set({ users }),
   setOnlineUsers: (onlineUsers) => set({ onlineUsers }),
 
+  // Блокировки
+blockedUsers: [],
+setBlockedUsers: (blockedUsers) => set({ blockedUsers }),
+addBlock: (username) => set((state) => ({
+  blockedUsers: [...state.blockedUsers, username]
+})),
+removeBlock: (username) => set((state) => ({
+  blockedUsers: state.blockedUsers.filter(u => u !== username)
+})),
+
   // Группы
   groups: [],
   setGroups: (groups) => set({ groups }),
