@@ -32,7 +32,7 @@ export default function UserProfile({ username, onClose }) {
     <div style={styles.overlay}>
       <div style={styles.modal}>
         
-        <button style={styles.btnClose} onClick={onClose}>✕</button>
+      <button style={styles.btnClose} onClick={(e) => { e.stopPropagation(); onClose(); }}>✕</button>
 
         <div style={{ ...styles.avatar, background: getColor(username) }}>
           {username.slice(0, 2).toUpperCase()}
