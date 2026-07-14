@@ -39,10 +39,12 @@ module.exports = (io) => {
       ]
     }).sort({ createdAt: 1 }).limit(100)
 
-    const decrypted = messages.map(m => ({
-      ...m.toObject(),
-      text: m.type === 'text' ? decrypt(m.text) : m.text
-    }))
+   const decrypted = messages.map(m => ({
+  ...m.toObject(),
+  text: m.type === 'text' 
+    ? decrypt(m.text) 
+    : m.text.replace('http://localhost:4000', 'https://gi-chat-production.up.railway.app')
+}))
 
     socket.emit('history', decrypted)
 
@@ -112,10 +114,12 @@ module.exports = (io) => {
     socket.on('get_group_history', async (groupId) => {
       try {
         const messages = await Message.find({ groupId }).sort({ createdAt: 1 }).limit(100)
-        const decrypted = messages.map(m => ({
-          ...m.toObject(),
-          text: m.type === 'text' ? decrypt(m.text) : m.text
-        }))
+       const decrypted = messages.map(m => ({
+  ...m.toObject(),
+  text: m.type === 'text' 
+    ? decrypt(m.text) 
+    : m.text.replace('http://localhost:4000', 'https://gi-chat-production.up.railway.app')
+}))
         socket.emit('group_history', decrypted)
       } catch(e) {
         socket.emit('group_history', [])
