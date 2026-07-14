@@ -1,57 +1,57 @@
-import { useEffect, useRef } from 'react'
-import { io } from 'socket.io-client'
+import { useEffect, useRef } from "react";
+import { io } from "socket.io-client";
 
-const SOCKET_URL = 'http://localhost:3000'
+const SOCKET_URL = "http://localhost:3000";
 
 export const useSocket = (username) => {
-  const socketRef = useRef(null)
+  const socketRef = useRef(null);
 
   useEffect(() => {
-    if (!username) return
+    if (!username) return;
 
-    socketRef.current = io(SOCKET_URL)
-    socketRef.current.emit('user_online', username)
+    socketRef.current = io(SOCKET_URL);
+    socketRef.current.emit("user_online", username);
 
     return () => {
-      socketRef.current.disconnect()
-    }
-  }, [username])
+      socketRef.current.disconnect();
+    };
+  }, [username]);
 
   const sendMessage = (to, text, from) => {
-    socketRef.current?.emit('private_message', { to, text, from })
-  }
+    socketRef.current?.emit("private_message", { to, text, from });
+  };
 
   const getHistory = (user1, user2) => {
-    socketRef.current?.emit('get_history', { user1, user2 })
-  }
+    socketRef.current?.emit("get_history", { user1, user2 });
+  };
 
   const sendTyping = (to, from) => {
-    socketRef.current?.emit('typing', { to, from })
-  }
+    socketRef.current?.emit("typing", { to, from });
+  };
 
   const stopTyping = (to, from) => {
-    socketRef.current?.emit('stop_typing', { to, from })
-  }
+    socketRef.current?.emit("stop_typing", { to, from });
+  };
 
   const onMessage = (callback) => {
-    socketRef.current?.on('private_message', callback)
-  }
+    socketRef.current?.on("private_message", callback);
+  };
 
   const onHistory = (callback) => {
-    socketRef.current?.on('history', callback)
-  }
+    socketRef.current?.on("history", callback);
+  };
 
   const onOnlineUsers = (callback) => {
-    socketRef.current?.on('online_users', callback)
-  }
+    socketRef.current?.on("online_users", callback);
+  };
 
   const onTyping = (callback) => {
-    socketRef.current?.on('typing', callback)
-  }
+    socketRef.current?.on("typing", callback);
+  };
 
   const onStopTyping = (callback) => {
-    socketRef.current?.on('stop_typing', callback)
-  }
+    socketRef.current?.on("stop_typing", callback);
+  };
 
   return {
     socket: socketRef.current,
@@ -63,6 +63,6 @@ export const useSocket = (username) => {
     onHistory,
     onOnlineUsers,
     onTyping,
-    onStopTyping
-  }
-}
+    onStopTyping,
+  };
+};
