@@ -4,7 +4,9 @@ export default function Message({ msg, isSent }) {
     minute: '2-digit'
   })
 
-  const isImage = msg.type === 'image' || msg.text?.startsWith('https://gi-chat-production.up.railway.app/uploads/')
+  const isImage = msg.type === 'image' || 
+  msg.text?.startsWith('http://localhost:4000/uploads/') ||
+  msg.text?.startsWith('https://gi-chat-production.up.railway.app/uploads/')
 
   const ReadStatus = () => {
     if (!isSent) return null

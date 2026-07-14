@@ -62,23 +62,23 @@ export default function ChatWindow({ onSendMessage, onTyping, onStopTyping, sock
   }
 
   const sendImage = async () => {
-    if (!imagePreview) return
-    const formData = new FormData()
-    formData.append('image', imagePreview.file)
-    try {
-      const res = await fetch('https://gi-chat-production.up.railway.app/api/upload', {
-        method: 'POST',
-        body: formData
-      })
-      const data = await res.json()
-      if (data.success) {
-        onSendMessage(data.url, 'image')
-        setImagePreview(null)
-      }
-    } catch(e) {
-      console.error('Ошибка загрузки фото', e)
+  if (!imagePreview) return
+  const formData = new FormData()
+  formData.append('image', imagePreview.file)
+  try {
+    const res = await fetch('https://gi-chat-production.up.railway.app/api/upload', {
+      method: 'POST',
+      body: formData
+    })
+    const data = await res.json()
+    if (data.success) {
+      onSendMessage(data.url, 'image')
+      setImagePreview(null)
     }
+  } catch(e) {
+    console.error('Ошибка загрузки фото', e)
   }
+}
 
   const getInitials = (name) => name?.slice(0, 2).toUpperCase() || 'U'
 
