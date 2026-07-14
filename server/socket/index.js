@@ -163,6 +163,35 @@ module.exports = (io) => {
       if (recipientSocket) io.to(recipientSocket).emit("stop_typing", { from });
     });
 
+    // Удалить сообщение
+    socket.on("delete_message", async ({ messageId, to }) => {
+      try {
+        await Message.deleteOne({ _id: messageId });
+        const recipientSocket = onlineUsers[to];
+        if (recipientSocket) {
+          io.to(recipientSocket).emit("message_deleted", { messageId });
+        }
+        socket.emit("message_deleted", { messageId });
+      } catch (e) {}
+    });
+
+    // Удалить чат
+    socket.on("delete_chat", async ({ user1, user2 }) => {
+      try {
+        await Message.deleteMany({
+          $or: [
+            { from: user1, to: user2 },
+            { from: user2, to: user1 },
+          ],
+        });
+        const recipientSocket = onlineUsers[user2];
+        if (recipientSocket) {
+          io.to(recipientSocket).emit("chat_deleted", { with: user1 });
+        }
+        socket.emit("chat_deleted", { with: user2 });
+      } catch (e) {}
+    });
+
     // Звонок — предложение
     socket.on("call_offer", ({ to, from, signal, callType }) => {
       const recipientSocket = onlineUsers[to];
