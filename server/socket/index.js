@@ -133,6 +133,46 @@ module.exports = (io) => {
       if (recipientSocket) io.to(recipientSocket).emit('stop_typing', { from })
     })
 
+    // Звонок — предложение
+socket.on('call_offer', ({ to, from, signal, callType }) => {
+  const recipientSocket = onlineUsers[to]
+  if (recipientSocket) {
+    io.to(recipientSocket).emit('call_offer', { from, signal, callType })
+  }
+})
+
+// Звонок — ответ
+socket.on('call_answer', ({ to, signal }) => {
+  const recipientSocket = onlineUsers[to]
+  if (recipientSocket) {
+    io.to(recipientSocket).emit('call_answer', { signal })
+  }
+})
+
+// ICE кандидат
+socket.on('ice_candidate', ({ to, candidate }) => {
+  const recipientSocket = onlineUsers[to]
+  if (recipientSocket) {
+    io.to(recipientSocket).emit('ice_candidate', { candidate })
+  }
+})
+
+// Завершить звонок
+socket.on('end_call', ({ to }) => {
+  const recipientSocket = onlineUsers[to]
+  if (recipientSocket) {
+    io.to(recipientSocket).emit('call_ended')
+  }
+})
+
+// Отклонить звонок
+socket.on('reject_call', ({ to }) => {
+  const recipientSocket = onlineUsers[to]
+  if (recipientSocket) {
+    io.to(recipientSocket).emit('call_rejected')
+  }
+})
+
     // Отметить сообщения как прочитанные
 socket.on('mark_read', async ({ from, to }) => {
   try {

@@ -17,13 +17,6 @@ export default function Chat() {
 
     socketRef.current.on('private_message', (msg) => {
       addMessage(msg)
-      // Отмечаем как прочитанное если чат открыт
-  if (msg.from === useStore.getState().currentChat) {
-    socketRef.current.emit('mark_read', {
-      from: msg.from,
-      to: user.username
-    })
-  }
       if (msg.from !== user.username) {
         showNotification(msg.from, msg.text)
         if (useStore.getState().currentChat !== msg.from) {
@@ -33,9 +26,7 @@ export default function Chat() {
     })
 
     socketRef.current.on('history', (messages) => setMessages(messages))
-
     socketRef.current.on('groups', (groups) => setGroups(groups))
-
     socketRef.current.on('group_created', (group) => addGroup(group))
 
     socketRef.current.on('group_message', (msg) => {
@@ -46,15 +37,6 @@ export default function Chat() {
 
     socketRef.current.on('group_history', (messages) => setMessages(messages))
 
-    socketRef.current.on('messages_read', ({ from, to }) => {
-  useStore.getState().markMessagesRead(from, to)
-  // Принудительно обновляем сообщения
-  socketRef.current.emit('get_history', {
-    user1: user.username,
-    user2: from === user.username ? to : from
-  })
-})
-
     socketRef.current.on('typing', ({ from }) => {
       useStore.getState().setTypingUser(from)
     })
@@ -63,11 +45,19 @@ export default function Chat() {
       useStore.getState().setTypingUser(null)
     })
 
+    socketRef.current.on('messages_read', ({ from, to }) => {
+      useStore.getState().markMessagesRead(from, to)
+      socketRef.current.emit('get_history', {
+        user1: user.username,
+        user2: from === user.username ? to : from
+      })
+    })
+
     Notification.requestPermission()
     loadUsers()
     const interval = setInterval(loadUsers, 3000)
 
-return () => {
+    return () => {
       socketRef.current.disconnect()
       clearInterval(interval)
     }
@@ -75,21 +65,19 @@ return () => {
   }, [])
 
   const loadUsers = async () => {
-  try {
-    const res = await fetch(`https://gi-chat-production.up.railway.app/api/auth/users`)
-    const data = await res.json()
-    if (data.success) {
-      setUsers(data.users.filter(u => u.username !== user.username))
-    }
-
-    // Загружаем заблокированных
-    const blockRes = await fetch(`https://gi-chat-production.up.railway.app/api/auth/blocks/${user.username}`)
-    const blockData = await blockRes.json()
-    if (blockData.success) {
-      useStore.getState().setBlockedUsers(blockData.blocks)
-    }
-  } catch(e) {}
-}
+    try {
+      const res = await fetch('https://gi-chat-production.up.railway.app/api/auth/users')
+      const data = await res.json()
+      if (data.success) {
+        setUsers(data.users.filter(u => u.username !== user.username))
+      }
+      const blockRes = await fetch(`https://gi-chat-production.up.railway.app/api/auth/blocks/${user.username}`)
+      const blockData = await blockRes.json()
+      if (blockData.success) {
+        useStore.getState().setBlockedUsers(blockData.blocks)
+      }
+    } catch(e) {}
+  }
 
   const showNotification = (from, text) => {
     if (Notification.permission === 'granted') {
@@ -126,18 +114,17 @@ return () => {
   }
 
   const openChat = (username) => {
-  useStore.getState().setCurrentChat(username)
-  useStore.getState().clearUnread(username)
-  socketRef.current?.emit('get_history', {
-    user1: user.username,
-    user2: username
-  })
-  // Отмечаем как прочитанное
-  socketRef.current?.emit('mark_read', {
-    from: username,
-    to: user.username
-  })
-}
+    useStore.getState().setCurrentChat(username)
+    useStore.getState().clearUnread(username)
+    socketRef.current?.emit('get_history', {
+      user1: user.username,
+      user2: username
+    })
+    socketRef.current?.emit('mark_read', {
+      from: username,
+      to: user.username
+    })
+  }
 
   const openGroup = (group) => {
     useStore.getState().setCurrentGroup(group)
@@ -172,6 +159,7 @@ return () => {
         onSendMessage={sendMessage}
         onTyping={sendTyping}
         onStopTyping={stopTyping}
+        socket={socketRef.current}
       />
     </div>
   )
