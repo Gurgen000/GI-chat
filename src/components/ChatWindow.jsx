@@ -36,10 +36,24 @@ export default function ChatWindow({
 
   useEffect(() => {
     if (!socket) return;
+
     socket.on("call_offer", ({ from, signal, callType }) => {
       setIncomingCall({ from, signal, callType });
     });
-    return () => socket.off("call_offer");
+
+    socket.on("message_deleted", ({ messageId }) => {
+      useStore.getState().deleteMessage(messageId);
+    });
+
+    socket.on("chat_deleted", () => {
+      useStore.getState().clearMessages();
+    });
+
+    return () => {
+      socket.off("call_offer");
+      socket.off("message_deleted");
+      socket.off("chat_deleted");
+    };
   }, [socket]);
 
   const handleSend = () => {
@@ -81,10 +95,7 @@ export default function ChatWindow({
     try {
       const res = await fetch(
         "https://gi-chat-production.up.railway.app/api/upload",
-        {
-          method: "POST",
-          body: formData,
-        },
+        { method: "POST", body: formData },
       );
       const data = await res.json();
       if (data.success) {
@@ -93,6 +104,26 @@ export default function ChatWindow({
       }
     } catch (e) {
       console.error("Ошибка загрузки фото", e);
+    }
+  };
+
+  const handleDeleteMessage = (messageId, onlyMe = false) => {
+    if (onlyMe) {
+      useStore.getState().deleteMessage(messageId);
+    } else {
+      socket.emit("delete_message", {
+        messageId,
+        to: currentChat,
+      });
+    }
+  };
+
+  const handleDeleteChat = () => {
+    if (window.confirm("Удалить весь чат?")) {
+      socket.emit("delete_chat", {
+        user1: user.username,
+        user2: currentChat,
+      });
     }
   };
 
@@ -188,6 +219,12 @@ export default function ChatWindow({
             >
               📹
             </button>
+            <button
+              style={{ ...styles.btnCall, fontSize: "14px" }}
+              onClick={handleDeleteChat}
+            >
+              🗑
+            </button>
           </div>
         )}
       </div>
@@ -202,7 +239,12 @@ export default function ChatWindow({
                 (m.from === currentChat && m.to === user.username),
           )
           .map((msg, i) => (
-            <Message key={i} msg={msg} isSent={msg.from === user.username} />
+            <Message
+              key={i}
+              msg={msg}
+              isSent={msg.from === user.username}
+              onDelete={handleDeleteMessage}
+            />
           ))}
         <div ref={messagesEndRef} />
       </div>
@@ -356,12 +398,7 @@ const styles = {
     gap: "12px",
     padding: "0 4px",
   },
-  chatName: {
-    fontSize: "15px",
-    fontWeight: "600",
-    color: "white",
-    margin: 0,
-  },
+  chatName: { fontSize: "15px", fontWeight: "600", color: "white", margin: 0 },
   status: { fontSize: "12px" },
   messages: {
     flex: 1,
@@ -370,11 +407,7 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     gap: "10px",
-    background: `
-      radial-gradient(ellipse at top left, rgba(108, 99, 255, 0.05) 0%, transparent 50%),
-      radial-gradient(ellipse at bottom right, rgba(255, 101, 132, 0.05) 0%, transparent 50%),
-      #0f0f0f
-    `,
+    background: `radial-gradient(ellipse at top left, rgba(108, 99, 255, 0.05) 0%, transparent 50%), radial-gradient(ellipse at bottom right, rgba(255, 101, 132, 0.05) 0%, transparent 50%), #0f0f0f`,
   },
   typing: {
     padding: "8px 20px",
@@ -458,10 +491,7 @@ const styles = {
     borderRadius: "12px",
     objectFit: "cover",
   },
-  previewButtons: {
-    display: "flex",
-    gap: "8px",
-  },
+  previewButtons: { display: "flex", gap: "8px" },
   btnSendImage: {
     flex: 1,
     padding: "8px",

@@ -68,6 +68,13 @@ const useStore = create((set) => ({
         m.from === from && m.to === to ? { ...m, read: true } : m,
       ),
     })),
+
+    // удаления сообщений
+  deleteMessage: (messageId) =>
+    set((state) => ({
+      messages: state.messages.filter((m) => m._id !== messageId),
+    })),
+  clearMessages: () => set({ messages: [] }),
 }));
 
 export default useStore;
