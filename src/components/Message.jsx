@@ -4,7 +4,9 @@ export default function Message({ msg, isSent }) {
     minute: '2-digit'
   })
 
-  const isImage = msg.type === 'image' || 
+  const imageUrl = msg.text?.replace('http://localhost:4000', 'https://gi-chat-production.up.railway.app')
+
+const isImage = msg.type === 'image' || 
   msg.text?.startsWith('http://localhost:4000/uploads/') ||
   msg.text?.startsWith('https://gi-chat-production.up.railway.app/uploads/')
 
@@ -41,11 +43,11 @@ export default function Message({ msg, isSent }) {
       }}>
         {isImage ? (
           <img
-            src={msg.text}
-            alt="фото"
-            style={styles.image}
-            onClick={() => window.open(msg.text, '_blank')}
-          />
+  src={imageUrl}
+  alt="фото"
+  style={styles.image}
+  onClick={() => window.open(imageUrl, '_blank')}
+/>
         ) : (
           <p style={styles.text}>{msg.text}</p>
         )}
