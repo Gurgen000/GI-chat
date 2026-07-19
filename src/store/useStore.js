@@ -43,9 +43,11 @@ const useStore = create((set) => ({
     set({ currentGroup, currentChat: null, messages: [] }),
   setMessages: (messages) => set({ messages }),
   addMessage: (message) =>
-    set((state) => ({
-      messages: [...state.messages, message],
-    })),
+    set((state) => {
+      const exists = state.messages.some((m) => m._id && m._id === message._id);
+      if (exists) return state;
+      return { messages: [...state.messages, message] };
+    }),
 
   // Непрочитанные
   unread: {},
@@ -69,7 +71,7 @@ const useStore = create((set) => ({
       ),
     })),
 
-    // удаления сообщений
+  // удаления сообщений
   deleteMessage: (messageId) =>
     set((state) => ({
       messages: state.messages.filter((m) => m._id !== messageId),
