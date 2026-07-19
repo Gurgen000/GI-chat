@@ -45,8 +45,11 @@ export default function ChatWindow({
       useStore.getState().deleteMessage(messageId);
     });
 
-    socket.on("chat_deleted", () => {
-      useStore.getState().clearMessages();
+    socket.on("chat_deleted", ({ with: deletedWith }) => {
+      const currentChat = useStore.getState().currentChat;
+      if (currentChat === deletedWith) {
+        useStore.getState().clearMessages();
+      }
     });
 
     return () => {
