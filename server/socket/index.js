@@ -15,23 +15,37 @@ module.exports = (io) => {
     // Личное сообщение
     socket.on("private_message", async ({ to, text, from, type }) => {
       const encryptedText = type === "text" ? encrypt(text) : text;
+      
+      // ✅ Явно указываем read: false при отправке
       const msg = {
         from,
         to,
         text: encryptedText,
         type: type || "text",
+        read: false,
         createdAt: new Date(),
       };
 
+      let savedMsg;
       try {
-        await new Message(msg).save();
-      } catch (e) {}
+        const newMsg = new Message(msg);
+        savedMsg = await newMsg.save();
+      } catch (e) {
+        console.error("Ошибка сохранения сообщения:", e);
+      }
 
-      // Отправляем расшифрованное
-      const decryptedMsg = { ...msg, text: type === "text" ? text : text };
+      // Подготавливаем объект для отправки на клиент
+      const decryptedMsg = { 
+        ...msg, 
+        _id: savedMsg ? savedMsg._id : Date.now().toString(),
+        text: type === "text" ? text : text,
+        read: false // ✅ Сообщение изначально ВСЕГДА не прочитано!
+      };
+
       const recipientSocket = onlineUsers[to];
       if (recipientSocket)
         io.to(recipientSocket).emit("private_message", decryptedMsg);
+      
       socket.emit("private_message", decryptedMsg);
     });
 
@@ -60,14 +74,15 @@ module.exports = (io) => {
 
         socket.emit("history", decrypted);
 
-        // Отмечаем как прочитанные
+        // Отмечаем входящие сообщения как прочитанные только при открытии истории
         await Message.updateMany(
           { from: user2, to: user1, read: false },
           { read: true },
         );
+        
         const senderSocket = onlineUsers[user2];
         if (senderSocket) {
-          io.to(senderSocket).emit("messages_read", { from: user1, to: user2 });
+          io.to(senderSocket).emit("messages_read", { from: user2, to: user1 });
         }
       } catch (e) {
         socket.emit("history", []);
@@ -120,7 +135,6 @@ module.exports = (io) => {
         };
         await new Message(msg).save();
 
-        // Отправляем расшифрованное
         const decryptedMsg = { ...msg, text: type === "text" ? text : text };
         group.members.forEach((member) => {
           const memberSocket = onlineUsers[member];
@@ -192,7 +206,7 @@ module.exports = (io) => {
       } catch (e) {}
     });
 
-    // Звонок — предложение
+    // Звонки
     socket.on("call_offer", ({ to, from, signal, callType }) => {
       const recipientSocket = onlineUsers[to];
       if (recipientSocket) {
@@ -200,7 +214,6 @@ module.exports = (io) => {
       }
     });
 
-    // Звонок — ответ
     socket.on("call_answer", ({ to, signal }) => {
       const recipientSocket = onlineUsers[to];
       if (recipientSocket) {
@@ -208,7 +221,6 @@ module.exports = (io) => {
       }
     });
 
-    // ICE кандидат
     socket.on("ice_candidate", ({ to, candidate }) => {
       const recipientSocket = onlineUsers[to];
       if (recipientSocket) {
@@ -216,7 +228,6 @@ module.exports = (io) => {
       }
     });
 
-    // Завершить звонок
     socket.on("end_call", ({ to }) => {
       const recipientSocket = onlineUsers[to];
       if (recipientSocket) {
@@ -224,7 +235,6 @@ module.exports = (io) => {
       }
     });
 
-    // Отклонить звонок
     socket.on("reject_call", ({ to }) => {
       const recipientSocket = onlineUsers[to];
       if (recipientSocket) {
@@ -236,10 +246,9 @@ module.exports = (io) => {
     socket.on("mark_read", async ({ from, to }) => {
       try {
         await Message.updateMany({ from, to, read: false }, { read: true });
-        // Уведомляем отправителя что сообщения прочитаны
         const senderSocket = onlineUsers[from];
         if (senderSocket) {
-          io.to(senderSocket).emit("messages_read", { from: to, to: from });
+          io.to(senderSocket).emit("messages_read", { from, to });
         }
       } catch (e) {}
     });
