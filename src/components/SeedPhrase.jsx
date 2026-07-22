@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { generateMnemonic } from "@scure/bip39";
-import { wordlist } from "@scure/bip39/wordlists/english";
+import { wordlist } from '@scure/bip39/wordlists/english.js'
 
 // Шаг 1 — Генерация
 export function GenerateSeedPhrase({ onComplete }) {
