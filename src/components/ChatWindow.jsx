@@ -194,6 +194,7 @@ export default function ChatWindow({
               ? getInitials(currentGroup.name)
               : getInitials(currentChat || "U")}
           </div>
+          {/* Шапка чата */}
           <div>
             <h3 style={styles.chatName}>
               {currentGroup ? currentGroup.name : currentChat}
@@ -207,8 +208,8 @@ export default function ChatWindow({
               {currentGroup
                 ? `${currentGroup.members.length} участников`
                 : isOnline
-                  ? "• онлайн"
-                  : "оффлайн"}
+                  ? "в сети"
+                  : "не в сети"}
             </span>
           </div>
         </div>

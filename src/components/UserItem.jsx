@@ -33,8 +33,13 @@ export default function UserItem({
       </div>
       <div style={styles.info}>
         <div style={styles.name}>{user.username}</div>
-        <div style={{ ...styles.status, color: isOnline ? "#4caf50" : "#888" }}>
-          {isOnline ? "онлайн" : "оффлайн"}
+        <div style={styles.info}>
+          <div style={styles.name}>{user.username}</div>
+          <div
+            style={{ ...styles.status, color: isOnline ? "#43b89c" : "#666" }}
+          >
+            {isOnline ? "в сети" : "не в сети"}
+          </div>
         </div>
       </div>
       {unread > 0 && <div style={styles.badge}>{unread}</div>}
