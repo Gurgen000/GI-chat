@@ -150,16 +150,22 @@ export default function ChatWindow({
   if (!currentChat && !currentGroup) {
     return (
       <div style={styles.empty}>
-        <span style={styles.emptyIcon}>💬</span>
-        <h2 style={styles.emptyTitle}>Добро пожаловать в GI Chat!</h2>
-        <p style={styles.emptySub}>Выбери пользователя чтобы начать общение</p>
+        <div style={styles.emptyIconWrapper}>💬</div>
+        <h2 style={styles.emptyTitle}>Добро пожаловать в GI Chat</h2>
+        <p style={styles.emptySub}>
+          Выберите диалог или создайте новую группу для начала общения
+        </p>
       </div>
     );
   }
 
+  const headerBg = currentGroup
+    ? getColor(currentGroup.name)
+    : getColor(currentChat || "U");
+
   return (
     <div style={styles.container}>
-      {/* Шапка */}
+      {/* Шапка с эффектом размытия */}
       <div style={styles.header}>
         <div
           style={{
@@ -170,12 +176,10 @@ export default function ChatWindow({
         >
           <div
             style={{
-              width: "44px",
-              height: "44px",
-              borderRadius: "50%",
-              background: currentGroup
-                ? getColor(currentGroup.name)
-                : getColor(currentChat || "U"),
+              width: "42px",
+              height: "42px",
+              borderRadius: "14px",
+              background: headerBg,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -183,6 +187,7 @@ export default function ChatWindow({
               fontWeight: "700",
               color: "white",
               flexShrink: 0,
+              boxShadow: `0 4px 15px ${headerBg}50`,
             }}
           >
             {currentGroup
@@ -196,35 +201,38 @@ export default function ChatWindow({
             <span
               style={{
                 ...styles.status,
-                color: currentGroup ? "#6c63ff" : isOnline ? "#4caf50" : "#888",
+                color: currentGroup ? "#8b5cf6" : isOnline ? "#43b89c" : "#777",
               }}
             >
               {currentGroup
                 ? `${currentGroup.members.length} участников`
                 : isOnline
-                  ? "онлайн"
+                  ? "• онлайн"
                   : "оффлайн"}
             </span>
           </div>
         </div>
 
         {currentChat && !currentGroup && (
-          <div style={{ display: "flex", gap: "10px", marginRight: "16px" }}>
+          <div style={{ display: "flex", gap: "8px" }}>
             <button
               style={styles.btnCall}
               onClick={() => setCallModal({ type: "audio" })}
+              title="Аудиозвонок"
             >
               📞
             </button>
             <button
               style={styles.btnCall}
               onClick={() => setCallModal({ type: "video" })}
+              title="Видеозвонок"
             >
               📹
             </button>
             <button
-              style={{ ...styles.btnCall, fontSize: "14px" }}
+              style={{ ...styles.btnCall, color: "#ff6584" }}
               onClick={handleDeleteChat}
+              title="Удалить чат"
             >
               🗑
             </button>
@@ -232,7 +240,7 @@ export default function ChatWindow({
         )}
       </div>
 
-      {/* Сообщения */}
+      {/* Сообщения с мягким свечением фонов */}
       <div style={styles.messages}>
         {messages
           .filter((m) =>
@@ -252,12 +260,12 @@ export default function ChatWindow({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Печатает */}
+      {/* Индикатор печати */}
       {typingUser && !currentGroup && typingUser === currentChat && (
         <div style={styles.typing}>печатает...</div>
       )}
 
-      {/* Поле ввода */}
+      {/* Поле ввода со стеклянным стилем */}
       <div style={styles.inputArea}>
         {blockedUsers.includes(currentChat) ? (
           <div style={styles.blockedMessage}>
@@ -292,7 +300,7 @@ export default function ChatWindow({
                     style={styles.btnCancelImage}
                     onClick={() => setImagePreview(null)}
                   >
-                    Отмена ✕
+                    ✕
                   </button>
                 </div>
               </div>
@@ -331,7 +339,7 @@ export default function ChatWindow({
         )}
       </div>
 
-      {/* Профиль */}
+      {/* Модалки */}
       {showProfile && currentChat && (
         <UserProfile
           username={currentChat}
@@ -339,7 +347,6 @@ export default function ChatWindow({
         />
       )}
 
-      {/* Исходящий звонок */}
       {callModal && (
         <CallModal
           callType={callModal.type}
@@ -351,7 +358,6 @@ export default function ChatWindow({
         />
       )}
 
-      {/* Входящий звонок */}
       {incomingCall && (
         <CallModal
           callType={incomingCall.callType}
@@ -373,7 +379,8 @@ const styles = {
     flex: 1,
     display: "flex",
     flexDirection: "column",
-    background: "#0f0f0f",
+    background: "#0c0c12",
+    position: "relative",
   },
   empty: {
     flex: 1,
@@ -381,116 +388,152 @@ const styles = {
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
-    gap: "15px",
-    color: "#444",
+    gap: "12px",
+    background:
+      "radial-gradient(circle at center, rgba(108, 99, 255, 0.05) 0%, transparent 70%), #0c0c12",
   },
-  emptyIcon: { fontSize: "60px" },
-  emptyTitle: { fontSize: "22px", color: "#666" },
-  emptySub: { fontSize: "14px" },
+  emptyIconWrapper: {
+    fontSize: "48px",
+    background: "rgba(255, 255, 255, 0.03)",
+    padding: "20px",
+    borderRadius: "24px",
+    border: "1px solid rgba(255, 255, 255, 0.05)",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+  },
+  emptyTitle: {
+    fontSize: "20px",
+    color: "#f1f1f1",
+    fontWeight: "600",
+    margin: 0,
+  },
+  emptySub: {
+    fontSize: "13px",
+    color: "#666677",
+    maxWidth: "300px",
+    textAlign: "center",
+  },
   header: {
-    padding: "16px 20px",
-    borderBottom: "1px solid #2a2a2a",
-    background: "#141414",
+    padding: "14px 20px",
+    borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
+    background: "rgba(18, 18, 26, 0.75)",
+    backdropFilter: "blur(12px)",
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
+    zIndex: 10,
   },
   headerInfo: {
     display: "flex",
     alignItems: "center",
     gap: "12px",
-    padding: "0 4px",
   },
-  chatName: { fontSize: "15px", fontWeight: "600", color: "white", margin: 0 },
-  status: { fontSize: "12px" },
+  chatName: {
+    fontSize: "15px",
+    fontWeight: "600",
+    color: "#f1f1f1",
+    margin: 0,
+  },
+  status: { fontSize: "12px", marginTop: "2px", display: "block" },
   messages: {
     flex: 1,
     overflowY: "auto",
     padding: "20px",
     display: "flex",
     flexDirection: "column",
-    gap: "10px",
-    background: `radial-gradient(ellipse at top left, rgba(108, 99, 255, 0.05) 0%, transparent 50%), radial-gradient(ellipse at bottom right, rgba(255, 101, 132, 0.05) 0%, transparent 50%), #0f0f0f`,
+    gap: "12px",
+    background: `radial-gradient(circle at 10% 20%, rgba(108, 99, 255, 0.08) 0%, transparent 40%), radial-gradient(circle at 90% 80%, rgba(255, 101, 132, 0.06) 0%, transparent 40%), #0c0c12`,
   },
   typing: {
-    padding: "8px 20px",
+    padding: "6px 20px",
     fontSize: "12px",
     color: "#6c63ff",
     fontStyle: "italic",
   },
   inputArea: {
-    padding: "16px 20px",
-    borderTop: "1px solid #2a2a2a",
+    padding: "14px 20px",
+    borderTop: "1px solid rgba(255, 255, 255, 0.06)",
     display: "flex",
-    gap: "12px",
+    gap: "10px",
     alignItems: "center",
-    background: "#141414",
+    background: "rgba(18, 18, 26, 0.75)",
+    backdropFilter: "blur(12px)",
     position: "relative",
   },
   input: {
     flex: 1,
     padding: "12px 18px",
-    borderRadius: "24px",
-    border: "1px solid #2a2a2a",
-    background: "#1a1a1a",
+    borderRadius: "16px",
+    border: "1px solid rgba(255, 255, 255, 0.08)",
+    background: "rgba(255, 255, 255, 0.04)",
     color: "white",
     fontSize: "14px",
     outline: "none",
+    transition: "border 0.2s",
   },
   btnSend: {
-    width: "44px",
-    height: "44px",
-    borderRadius: "50%",
+    width: "42px",
+    height: "42px",
+    borderRadius: "14px",
     border: "none",
-    background: "linear-gradient(135deg, #6c63ff, #ff6584)",
+    background: "linear-gradient(135deg, #6c63ff, #8b5cf6)",
     color: "white",
-    fontSize: "18px",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  btnEmoji: {
-    fontSize: "22px",
-    background: "transparent",
-    border: "none",
-    cursor: "pointer",
-    padding: "4px",
-  },
-  btnCall: {
-    background: "#1e1e2e",
-    border: "none",
-    borderRadius: "50%",
-    width: "36px",
-    height: "36px",
     fontSize: "16px",
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+    boxShadow: "0 4px 12px rgba(108, 99, 255, 0.3)",
+  },
+  btnEmoji: {
+    fontSize: "20px",
+    background: "transparent",
+    border: "none",
+    cursor: "pointer",
+    padding: "6px",
+    borderRadius: "10px",
+    opacity: 0.8,
+    transition: "opacity 0.2s",
+  },
+  btnCall: {
+    background: "rgba(255, 255, 255, 0.05)",
+    border: "1px solid rgba(255, 255, 255, 0.08)",
+    borderRadius: "12px",
+    width: "36px",
+    height: "36px",
+    fontSize: "15px",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    color: "#f1f1f1",
   },
   emojiPicker: {
     position: "absolute",
-    bottom: "80px",
+    bottom: "75px",
     left: "20px",
     zIndex: 100,
+    boxShadow: "0 10px 40px rgba(0,0,0,0.5)",
+    borderRadius: "16px",
+    overflow: "hidden",
   },
   previewContainer: {
     position: "absolute",
-    bottom: "80px",
+    bottom: "75px",
     left: "20px",
-    background: "#1e1e1e",
+    background: "rgba(26, 26, 36, 0.95)",
+    backdropFilter: "blur(12px)",
     borderRadius: "16px",
     padding: "12px",
     display: "flex",
     flexDirection: "column",
     gap: "10px",
     zIndex: 100,
-    boxShadow: "0 4px 20px rgba(0,0,0,0.5)",
+    border: "1px solid rgba(255, 255, 255, 0.08)",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
   },
   previewImage: {
-    maxWidth: "250px",
-    maxHeight: "200px",
+    maxWidth: "240px",
+    maxHeight: "180px",
     borderRadius: "12px",
     objectFit: "cover",
   },
@@ -500,7 +543,7 @@ const styles = {
     padding: "8px",
     borderRadius: "10px",
     border: "none",
-    background: "linear-gradient(135deg, #6c63ff, #ff6584)",
+    background: "linear-gradient(135deg, #6c63ff, #8b5cf6)",
     color: "white",
     cursor: "pointer",
     fontWeight: "600",
@@ -509,9 +552,9 @@ const styles = {
   btnCancelImage: {
     padding: "8px 12px",
     borderRadius: "10px",
-    border: "1px solid #444",
-    background: "transparent",
-    color: "#888",
+    border: "none",
+    background: "rgba(255, 255, 255, 0.1)",
+    color: "#fff",
     cursor: "pointer",
     fontSize: "13px",
   },
@@ -519,7 +562,7 @@ const styles = {
     flex: 1,
     textAlign: "center",
     color: "#888",
-    fontSize: "14px",
-    padding: "12px",
+    fontSize: "13px",
+    padding: "10px",
   },
 };

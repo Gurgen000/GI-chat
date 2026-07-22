@@ -40,27 +40,31 @@ export default function Sidebar({
     return colors[index];
   };
 
+  const userAvatarBg = getColor(user?.username || "U");
+
   return (
     <div style={styles.container}>
-      {/* Шапка */}
+      {/* Шапка профиля */}
       <div style={styles.header}>
         <div style={styles.profile}>
           <div
             style={{
               ...styles.avatarCircle,
-              background: getColor(user?.username || "U"),
+              background: userAvatarBg,
+              boxShadow: `0 4px 12px ${userAvatarBg}40`,
             }}
           >
             {getInitials(user?.username || "U")}
           </div>
           <div>
             <div style={styles.username}>{user?.username}</div>
-            <div style={styles.onlineStatus}>🟢 онлайн</div>
+            <div style={styles.onlineStatus}>• в сети</div>
           </div>
         </div>
         <button
           style={styles.btnSettings}
           onClick={() => setShowSettings(true)}
+          title="Настройки"
         >
           ⚙️
         </button>
@@ -103,7 +107,7 @@ export default function Sidebar({
         {tab === "chats" && (
           <>
             {filteredUsers.length === 0 && (
-              <p style={styles.empty}>Нет пользователей</p>
+              <p style={styles.empty}>Пользователи не найдены</p>
             )}
             {filteredUsers.map((u) => (
               <UserItem
@@ -125,38 +129,47 @@ export default function Sidebar({
               style={styles.btnNewGroup}
               onClick={() => setShowCreateGroup(true)}
             >
-              + Создать группу
+              + Создать новую группу
             </button>
             {filteredGroups.length === 0 && (
-              <p style={styles.empty}>Нет групп</p>
+              <p style={styles.empty}>Группы не найдены</p>
             )}
-            {filteredGroups.map((g) => (
-              <div
-                key={g.id}
-                style={{
-                  ...styles.groupItem,
-                  background:
-                    currentGroup?.id === g.id ? "#1e1e2e" : "transparent",
-                }}
-                onClick={() => onOpenGroup(g)}
-              >
+            {filteredGroups.map((g) => {
+              const groupBg = getColor(g.name);
+              const isActive = currentGroup?.id === g.id;
+              return (
                 <div
+                  key={g.id}
                   style={{
-                    ...styles.avatarCircle,
-                    background: getColor(g.name),
-                    fontSize: "16px",
+                    ...styles.groupItem,
+                    background: isActive
+                      ? "rgba(108, 99, 255, 0.15)"
+                      : "transparent",
+                    border: isActive
+                      ? "1px solid rgba(108, 99, 255, 0.3)"
+                      : "1px solid transparent",
                   }}
+                  onClick={() => onOpenGroup(g)}
                 >
-                  {getInitials(g.name)}
-                </div>
-                <div style={styles.groupInfo}>
-                  <div style={styles.groupName}>{g.name}</div>
-                  <div style={styles.groupMembers}>
-                    {g.members.length} участников
+                  <div
+                    style={{
+                      ...styles.avatarCircle,
+                      background: groupBg,
+                      boxShadow: `0 4px 12px ${groupBg}40`,
+                      fontSize: "13px",
+                    }}
+                  >
+                    {getInitials(g.name)}
+                  </div>
+                  <div style={styles.groupInfo}>
+                    <div style={styles.groupName}>{g.name}</div>
+                    <div style={styles.groupMembers}>
+                      {g.members.length} участников
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </>
         )}
       </div>
@@ -175,9 +188,9 @@ export default function Sidebar({
 
 const styles = {
   container: {
-    width: "300px",
-    background: "#141414",
-    borderRight: "1px solid #2a2a2a",
+    width: "320px",
+    background: "#12121a",
+    borderRight: "1px solid rgba(255, 255, 255, 0.06)",
     display: "flex",
     flexDirection: "column",
   },
@@ -186,22 +199,21 @@ const styles = {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    borderBottom: "1px solid #2a2a2a",
-    background: "#141414",
+    borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
   },
   profile: {
     display: "flex",
     alignItems: "center",
-    gap: "10px",
+    gap: "12px",
   },
   avatarCircle: {
-    width: "42px",
-    height: "42px",
-    borderRadius: "50%",
+    width: "40px",
+    height: "40px",
+    borderRadius: "12px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: "14px",
+    fontSize: "13px",
     fontWeight: "700",
     color: "white",
     flexShrink: 0,
@@ -213,28 +225,18 @@ const styles = {
   },
   onlineStatus: {
     fontSize: "11px",
-    color: "#4caf50",
+    color: "#43b89c",
     marginTop: "2px",
-  },
-  btnLogout: {
-    padding: "6px 14px",
-    borderRadius: "8px",
-    border: "1px solid #2a2a2a",
-    background: "transparent",
-    color: "#888",
-    cursor: "pointer",
-    fontSize: "12px",
   },
   searchBox: {
     padding: "12px 16px",
-    borderBottom: "1px solid #2a2a2a",
   },
   searchInput: {
     width: "100%",
     padding: "10px 14px",
-    borderRadius: "10px",
-    border: "1px solid #2a2a2a",
-    background: "#1a1a1a",
+    borderRadius: "12px",
+    border: "1px solid rgba(255, 255, 255, 0.08)",
+    background: "rgba(255, 255, 255, 0.04)",
     color: "white",
     fontSize: "13px",
     outline: "none",
@@ -242,9 +244,9 @@ const styles = {
   },
   tabs: {
     display: "flex",
-    padding: "8px",
+    padding: "0 16px 10px",
     gap: "6px",
-    borderBottom: "1px solid #2a2a2a",
+    borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
   },
   tab: {
     flex: 1,
@@ -252,57 +254,66 @@ const styles = {
     border: "none",
     borderRadius: "10px",
     background: "transparent",
-    color: "#888",
+    color: "#777788",
     cursor: "pointer",
     fontSize: "13px",
     fontWeight: "500",
+    transition: "all 0.2s",
   },
   tabActive: {
-    background: "#1e1e2e",
+    background: "rgba(255, 255, 255, 0.08)",
     color: "white",
   },
   list: {
     flex: 1,
     overflowY: "auto",
-    padding: "8px",
+    padding: "8px 12px",
   },
   empty: {
     textAlign: "center",
-    color: "#444",
+    color: "#555566",
     padding: "20px",
     fontSize: "13px",
   },
   btnNewGroup: {
     width: "100%",
     padding: "10px",
-    borderRadius: "10px",
-    border: "1px dashed #2a2a2a",
-    background: "transparent",
+    borderRadius: "12px",
+    border: "1px dashed rgba(108, 99, 255, 0.4)",
+    background: "rgba(108, 99, 255, 0.05)",
     color: "#6c63ff",
     cursor: "pointer",
     fontSize: "13px",
     fontWeight: "600",
-    marginBottom: "8px",
+    marginBottom: "10px",
   },
   groupItem: {
     display: "flex",
     alignItems: "center",
     gap: "12px",
-    padding: "12px",
-    borderRadius: "12px",
+    padding: "10px 12px",
+    borderRadius: "14px",
     cursor: "pointer",
-    transition: "background 0.2s",
+    transition: "all 0.2s",
+    margin: "2px 0",
   },
   btnSettings: {
-    padding: "6px 10px",
-    borderRadius: "8px",
-    border: "1px solid #2a2a2a",
-    background: "transparent",
+    padding: "8px",
+    borderRadius: "10px",
+    border: "1px solid rgba(255, 255, 255, 0.08)",
+    background: "rgba(255, 255, 255, 0.03)",
     color: "#888",
     cursor: "pointer",
     fontSize: "14px",
   },
-  groupInfo: { flex: 1 },
-  groupName: { fontWeight: "500", fontSize: "14px", color: "white" },
-  groupMembers: { fontSize: "12px", color: "#888", marginTop: "2px" },
+  groupInfo: { flex: 1, overflow: "hidden" },
+  groupName: {
+    fontWeight: "600",
+    fontSize: "14px",
+    color: "white",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  },
+  groupMembers: { fontSize: "12px", color: "#777788", marginTop: "2px" },
 };

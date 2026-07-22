@@ -146,6 +146,7 @@ export default function CallModal({
   };
 
   const displayName = isIncoming ? callerName : currentChat;
+  const avatarBg = getColor(displayName);
 
   return (
     <div style={styles.overlay}>
@@ -175,7 +176,8 @@ export default function CallModal({
             <div
               style={{
                 ...styles.callerAvatar,
-                background: getColor(displayName),
+                background: avatarBg,
+                boxShadow: `0 8px 30px ${avatarBg}60`,
               }}
             >
               {displayName?.slice(0, 2).toUpperCase()}
@@ -197,7 +199,7 @@ export default function CallModal({
           {callStatus === "incoming" && (
             <>
               <button
-                style={{ ...styles.btn, background: "#4caf50" }}
+                style={{ ...styles.btn, background: "#43b89c" }}
                 onClick={answerCall}
               >
                 📞
@@ -216,7 +218,7 @@ export default function CallModal({
               <button
                 style={{
                   ...styles.btn,
-                  background: isMuted ? "#ff4444" : "#2a2a2a",
+                  background: isMuted ? "#ff4444" : "rgba(255,255,255,0.1)",
                 }}
                 onClick={toggleMute}
               >
@@ -226,7 +228,7 @@ export default function CallModal({
                 <button
                   style={{
                     ...styles.btn,
-                    background: isCameraOff ? "#ff4444" : "#2a2a2a",
+                    background: isCameraOff ? "#ff4444" : "rgba(255,255,255,0.1)",
                   }}
                   onClick={toggleCamera}
                 >
@@ -263,28 +265,30 @@ const styles = {
     left: 0,
     right: 0,
     bottom: 0,
-    background: "rgba(0,0,0,0.9)",
+    background: "rgba(0,0,0,0.85)",
+    backdropFilter: "blur(10px)",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     zIndex: 2000,
   },
   modal: {
-    background: "#141414",
-    borderRadius: "20px",
+    background: "#14141e",
+    borderRadius: "24px",
     padding: "32px 24px",
-    width: "400px",
+    width: "360px",
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
     gap: "24px",
-    border: "1px solid #2a2a2a",
+    border: "1px solid rgba(255, 255, 255, 0.08)",
+    boxShadow: "0 25px 50px rgba(0, 0, 0, 0.6)",
   },
   videoContainer: {
     position: "relative",
     width: "100%",
-    height: "300px",
-    borderRadius: "12px",
+    height: "280px",
+    borderRadius: "16px",
     overflow: "hidden",
     background: "#000",
   },
@@ -295,11 +299,11 @@ const styles = {
   },
   myVideo: {
     position: "absolute",
-    bottom: "10px",
-    right: "10px",
-    width: "100px",
-    height: "75px",
-    borderRadius: "8px",
+    bottom: "12px",
+    right: "12px",
+    width: "90px",
+    height: "65px",
+    borderRadius: "10px",
     objectFit: "cover",
     border: "2px solid #6c63ff",
   },
@@ -307,28 +311,28 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    gap: "16px",
+    gap: "14px",
   },
   callerAvatar: {
-    width: "100px",
-    height: "100px",
-    borderRadius: "50%",
+    width: "90px",
+    height: "90px",
+    borderRadius: "28px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: "32px",
+    fontSize: "28px",
     fontWeight: "700",
     color: "white",
   },
   callerName: {
     color: "white",
-    fontSize: "22px",
+    fontSize: "20px",
     fontWeight: "700",
     margin: 0,
   },
   callStatus: {
-    color: "#888",
-    fontSize: "14px",
+    color: "#888899",
+    fontSize: "13px",
     margin: 0,
   },
   controls: {
@@ -336,14 +340,16 @@ const styles = {
     gap: "16px",
   },
   btn: {
-    width: "60px",
-    height: "60px",
+    width: "56px",
+    height: "56px",
     borderRadius: "50%",
     border: "none",
-    fontSize: "24px",
+    fontSize: "22px",
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+    color: "#fff",
+    transition: "transform 0.2s",
   },
 };
