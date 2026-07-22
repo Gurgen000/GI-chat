@@ -34,6 +34,11 @@ export default function Auth() {
         setUser({ username: data.username }, data.token);
         localStorage.setItem("username", data.username);
         localStorage.setItem("token", data.token);
+        if (data.hasSeed) {
+          localStorage.setItem("seedDone", "true");
+        } else {
+          localStorage.removeItem("seedDone");
+        }
       } else {
         setError(data.message);
       }
