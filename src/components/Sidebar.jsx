@@ -58,7 +58,8 @@ export default function Sidebar({
           </div>
           <div>
             <div style={styles.username}>{user?.username}</div>
-            <div style={styles.onlineStatus}>• в сети</div>
+            {/* Оставили только красивую надпись со статусом */}
+            <div style={styles.onlineStatus}>в сети</div>
           </div>
         </div>
         <button
