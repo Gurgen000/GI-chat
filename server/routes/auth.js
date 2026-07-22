@@ -139,4 +139,38 @@ router.delete("/chat", async (req, res) => {
   }
 });
 
+// Сохранить хэш сид-фразы
+router.post('/save-seed-hash', async (req, res) => {
+  try {
+    const { publicIdentifier, username } = req.body
+    if (!publicIdentifier || !username) {
+      return res.json({ success: false, message: 'Нет данных!' })
+    }
+    // bcrypt с солью — даже одинаковые идентификаторы дадут разные хэши
+    const hashed = await bcrypt.hash(publicIdentifier, 12)
+    await User.findOneAndUpdate(
+      { username },
+      { seedHash: hashed }
+    )
+    res.json({ success: true })
+  } catch(e) {
+    res.json({ success: false })
+  }
+})
+
+// Проверить сид-фразу (для восстановления доступа)
+router.post('/verify-seed', async (req, res) => {
+  try {
+    const { publicIdentifier, username } = req.body
+    const user = await User.findOne({ username })
+    if (!user || !user.seedHash) {
+      return res.json({ success: false, message: 'Сид-фраза не найдена!' })
+    }
+    const isValid = await bcrypt.compare(publicIdentifier, user.seedHash)
+    res.json({ success: isValid })
+  } catch(e) {
+    res.json({ success: false })
+  }
+})
+
 module.exports = { router };
