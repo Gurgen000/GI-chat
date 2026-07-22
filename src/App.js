@@ -4,10 +4,11 @@ import Auth from "./pages/Auth";
 import Chat from "./pages/Chat";
 import SeedPhrasePage from "./pages/SeedPhrasePage";
 
-
 function App() {
   const { user, setUser } = useStore();
-  const [seedDone, setSeedDone] = useState(false);
+  const [seedDone, setSeedDone] = useState(() => {
+    return localStorage.getItem("seedDone") === "true";
+  });
 
   useEffect(() => {
     const username = localStorage.getItem("username");
@@ -22,7 +23,12 @@ function App() {
     <div style={{ fontFamily: "Inter, sans-serif" }}>
       {!user && <Auth />}
       {user && !seedDone && (
-        <SeedPhrasePage onComplete={() => setSeedDone(true)} />
+        <SeedPhrasePage
+          onComplete={() => {
+            localStorage.setItem("seedDone", "true");
+            setSeedDone(true);
+          }}
+        />
       )}
       {user && seedDone && <Chat />}
     </div>

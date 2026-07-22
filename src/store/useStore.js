@@ -5,7 +5,12 @@ const useStore = create((set) => ({
   user: null,
   token: null,
   setUser: (user, token) => set({ user, token }),
-  logout: () => set({ user: null, token: null }),
+  logout: () => {
+    localStorage.removeItem("seedDone");
+    localStorage.removeItem("username");
+    localStorage.removeItem("token");
+    return set({ user: null, token: null });
+  },
 
   // Пользователи
   users: [],
