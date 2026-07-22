@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { generateMnemonic, validateMnemonic } from "@scure/bip39";
+import { generateMnemonic } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english";
 
 // Шаг 1 — Генерация
