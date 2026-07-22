@@ -7,6 +7,18 @@ const Message = require("../models/Message");
 
 const SECRET = "gichat_secret_key_2026";
 
+const authMiddleware = (req, res, next) => {
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) return res.json({ success: false, message: "Нет токена!" });
+    const decoded = jwt.verify(token, SECRET);
+    req.username = decoded.username; // берём username из токена!
+    next();
+  } catch (e) {
+    res.json({ success: false, message: "Неверный токен!" });
+  }
+};
+
 // Регистрация
 router.post("/register", async (req, res) => {
   try {
@@ -62,11 +74,12 @@ router.get("/users", async (req, res) => {
   }
 });
 
-router.delete("/delete", async (req, res) => {
+router.delete("/delete", authMiddleware, async (req, res) => {
   try {
-    const { username } = req.body;
-    await User.deleteOne({ username });
-    await Message.deleteMany({ $or: [{ from: username }, { to: username }] });
+    await User.deleteOne({ username: req.username });
+    await Message.deleteMany({
+      $or: [{ from: req.username }, { to: req.username }],
+    });
     res.json({ success: true });
   } catch (e) {
     res.json({ success: false });
@@ -76,13 +89,13 @@ router.delete("/delete", async (req, res) => {
 const Block = require("../models/Block");
 
 // Заблокировать пользователя
-router.post("/block", async (req, res) => {
+router.post("/block", authMiddleware, async (req, res) => {
   try {
-    const { blocker, blocked } = req.body;
-    const exists = await Block.findOne({ blocker, blocked });
+    const { blocked } = req.body;
+    const exists = await Block.findOne({ blocker: req.username, blocked });
     if (exists)
       return res.json({ success: false, message: "Уже заблокирован!" });
-    await new Block({ blocker, blocked }).save();
+    await new Block({ blocker: req.username, blocked }).save();
     res.json({ success: true });
   } catch (e) {
     res.json({ success: false });
@@ -90,10 +103,10 @@ router.post("/block", async (req, res) => {
 });
 
 // Разблокировать
-router.post("/unblock", async (req, res) => {
+router.post("/unblock", authMiddleware, async (req, res) => {
   try {
-    const { blocker, blocked } = req.body;
-    await Block.deleteOne({ blocker, blocked });
+    const { blocked } = req.body;
+    await Block.deleteOne({ blocker: req.username, blocked });
     res.json({ success: true });
   } catch (e) {
     res.json({ success: false });
@@ -137,15 +150,18 @@ router.delete("/chat", async (req, res) => {
 });
 
 // Сохранить хэш сид-фразы
-router.post("/save-seed-hash", async (req, res) => {
+router.post("/save-seed-hash", authMiddleware, async (req, res) => {
   try {
-    const { publicIdentifier, username } = req.body;
-    if (!publicIdentifier || !username) {
+    const { publicIdentifier } = req.body;
+    if (!publicIdentifier) {
       return res.json({ success: false, message: "Нет данных!" });
     }
-    // bcrypt с солью — даже одинаковые идентификаторы дадут разные хэши
     const hashed = await bcrypt.hash(publicIdentifier, 12);
-    await User.findOneAndUpdate({ username }, { seedHash: hashed });
+    // Берём username из токена — не из req.body!
+    await User.findOneAndUpdate(
+      { username: req.username },
+      { seedHash: hashed },
+    );
     res.json({ success: true });
   } catch (e) {
     res.json({ success: false });

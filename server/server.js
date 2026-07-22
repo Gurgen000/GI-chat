@@ -17,7 +17,15 @@ const io = new Server(server, {
   cors: { origin: "*" },
 });
 
-app.use(cors());
+app.use(cors({
+  origin: [
+    'https://gi-chat-rho.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:3001',
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}))
 app.use(express.json());
 // Rate limiting для авторизации
 const authLimiter = rateLimit({
